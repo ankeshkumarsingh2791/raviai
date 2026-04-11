@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Tool Form – AITools Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet" />
+  <style>
+    :root { --bg:#0e0f13;--surface:#16181f;--surface2:#1e2029;--border:#2a2d3a;--accent:#6c63ff;--accent2:#ff6584;--accent3:#43e97b;--text:#e8eaf0;--muted:#7b7f93; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 16px 80px}
+    .back-btn{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;text-decoration:none;margin-bottom:28px;align-self:flex-start;max-width:720px;width:100%;transition:color .15s}
+    .back-btn:hover{color:var(--text)}
+    .stepper{display:flex;align-items:center;width:100%;max-width:720px;margin-bottom:32px}
+    .step{display:flex;align-items:center;gap:10px;flex:1;position:relative}
+    .step:not(:last-child)::after{content:"";position:absolute;left:calc(20px + 10px);right:0;top:50%;height:1px;background:var(--border);z-index:0;transition:background .3s}
+    .step.completed:not(:last-child)::after{background:var(--accent)}
+    .step-num{width:32px;height:32px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:'DM Mono',monospace;color:var(--muted);flex-shrink:0;position:relative;z-index:1;transition:all .3s}
+    .step.active .step-num{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 4px rgba(108,99,255,.2)}
+    .step.completed .step-num{background:var(--accent3);border-color:var(--accent3);color:#0e0f13}
+    .step-info{flex:1;min-width:0}
+    .step-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+    .step.active .step-label{color:var(--accent)}
+    .step.completed .step-label{color:var(--accent3)}
+    .step-title{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .progress-bar{width:100%;max-width:720px;height:3px;background:var(--border);border-radius:2px;margin-bottom:24px;overflow:hidden}
+    .progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s ease}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:32px;width:100%;max-width:720px}
+    .card-title{font-size:20px;font-weight:700;margin-bottom:4px}
+    .card-sub{font-size:13px;color:var(--muted);margin-bottom:28px}
+    .form-section{display:none}
+    .form-section.active{display:block;animation:fadeIn .2s ease}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+    .section-divider{height:1px;background:var(--border);margin:24px 0}
+    .section-label{font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+    .form-row{margin-bottom:20px}
+    .form-row label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+    .form-row input,.form-row textarea,.form-row select{width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border .15s}
+    .form-row input:focus,.form-row textarea:focus,.form-row select:focus{border-color:var(--accent)}
+    .form-row textarea{resize:vertical;min-height:90px}
+    .form-row select option{background:var(--surface2)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .file-input{display:none}
+    .file-label{display:flex;align-items:center;gap:10px;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:14px;color:var(--muted);transition:border .15s}
+    .file-label:hover{border-color:var(--accent);color:var(--text)}
+    .file-label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .preview-wrap{margin-top:10px;display:none}
+    .preview-wrap img{width:64px;height:64px;border-radius:8px;object-fit:cover;border:1px solid var(--border)}
+    .alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:20px;display:none}
+    .alert.success{background:rgba(67,233,123,.1);border:1px solid rgba(67,233,123,.25);color:var(--accent3)}
+    .alert.error{background:rgba(255,101,132,.1);border:1px solid rgba(255,101,132,.25);color:var(--accent2)}
+    .form-footer{display:flex;align-items:center;justify-content:space-between;margin-top:28px;padding-top:24px;border-top:1px solid var(--border)}
+    .footer-right{display:flex;gap:10px;align-items:center}
+    .btn-prev{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s}
+    .btn-prev:hover{border-color:var(--text);color:var(--text)}
+    .btn-next,.btn-submit{display:inline-flex;align-items:center;gap:7px;padding:10px 24px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;transition:background .15s}
+    .btn-next:hover,.btn-submit:hover{background:#5a52d5}
+    .btn-next:disabled,.btn-submit:disabled{background:#3d3a6e;color:var(--muted);cursor:not-allowed}
+    .btn-cancel-form{display:inline-flex;align-items:center;padding:10px 20px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:14px;font-family:'DM Sans',sans-serif;cursor:pointer;text-decoration:none;transition:all .15s}
+    .btn-cancel-form:hover{border-color:var(--text);color:var(--text)}
+    .quill-wrap{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface2)}
+    .quill-wrap .ql-toolbar{background:var(--surface);border:none;border-bottom:1px solid var(--border);padding:8px 12px}
+    .quill-wrap .ql-toolbar .ql-stroke{stroke:var(--muted)}
+    .quill-wrap .ql-toolbar .ql-fill{fill:var(--muted)}
+    .quill-wrap .ql-toolbar .ql-picker{color:var(--muted)}
+    .quill-wrap .ql-toolbar button:hover .ql-stroke,.quill-wrap .ql-toolbar .ql-active .ql-stroke{stroke:var(--accent)}
+    .quill-wrap .ql-toolbar button:hover .ql-fill,.quill-wrap .ql-toolbar .ql-active .ql-fill{fill:var(--accent)}
+    .quill-wrap .ql-toolbar button:hover,.quill-wrap .ql-toolbar .ql-active{color:var(--accent)}
+    .quill-wrap .ql-container{border:none;font-family:'DM Sans',sans-serif;font-size:14px}
+    .quill-wrap .ql-editor{background:var(--surface2);color:var(--text);min-height:120px;padding:12px 14px}
+    .quill-wrap .ql-editor.ql-blank::before{color:var(--muted);font-style:normal}
+    .quill-wrap .ql-editor ul li,.quill-wrap .ql-editor ol li{color:var(--text)}
+    .quill-wrap .ql-editor ul li::before{color:var(--accent)}
+    .quill-wrap.pros .ql-editor ul li::before{color:var(--accent3)}
+    .quill-wrap.cons .ql-editor ul li::before{color:var(--accent2)}
+  </style>
+</head>
+<body>
+
+<a class="back-btn" href="dashboard.html">
+  <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+  Back to Dashboard
+</a>
+
+<div class="stepper">
+  <div class="step active" id="step-1">
+    <div class="step-num" id="stepnum-1">1</div>
+    <div class="step-info"><div class="step-label">Step 1</div><div class="step-title">Basic Info</div></div>
+  </div>
+  <div class="step" id="step-2">
+    <div class="step-num" id="stepnum-2">2</div>
+    <div class="step-info"><div class="step-label">Step 2</div><div class="step-title">Tool Details</div></div>
+  </div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:50%"></div></div>
+
+<div class="card">
+  <div class="alert" id="alert"></div>
+
+  <!-- SECTION 1 -->
+  <div class="form-section active" id="section-1">
+    <div class="card-title" id="formTitle">Add AI Tool</div>
+    <div class="card-sub" id="formSub">Basic information about the tool</div>
+
+    <div class="section-label">Basic Info</div>
+    <div class="form-grid">
+      <div class="form-row"><label>Tool Name *</label><input type="text" id="toolName" placeholder="e.g. ChatGPT"/></div>
+      <div class="form-row"><label>Tool URL</label><input type="text" id="toolUrl" placeholder="https://tool.com"/></div>
+    </div>
+    <div class="form-row"><label>Heading</label><input type="text" id="toolHeading" placeholder="Short headline for the tool"/></div>
+    <div class="form-row"><label>YouTube URL</label><input type="text" id="toolYoutube" placeholder="https://youtube.com/..."/></div>
+
+    <div class="section-divider"></div>
+    <div class="section-label">Image</div>
+    <div class="form-row">
+      <label>Tool Image</label>
+      <input type="file" class="file-input" id="toolImageFile" accept="image/*" onchange="previewImage(this,'toolPreview','toolFileName')"/>
+      <label class="file-label" for="toolImageFile">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span id="toolFileName">Click to upload image</span>
+      </label>
+      <div class="preview-wrap" id="toolPreviewWrap"><img id="toolPreview" src="" alt="preview"/></div>
+    </div>
+
+    <div class="section-divider"></div>
+    <div class="section-label">Pricing & Rating</div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Pricing Model</label>
+        <select id="toolPricing">
+          <option value="">-- Select --</option>
+          <option value="Free">Free</option>
+          <option value="Freemium">Freemium</option>
+          <option value="Paid">Paid</option>
+          <option value="Free Trial">Free Trial</option>
+          <option value="Contact for Pricing">Contact for Pricing</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Admin Rating (0-5)</label><input type="number" id="toolRating" placeholder="4.5" min="0" max="5" step="0.1"/></div>
+    </div>
+
+    <div class="section-divider"></div>
+    <div class="section-label">Tags & Categories</div>
+    <div class="form-row"><label>Hashtags (comma separated)</label><input type="text" id="toolHashtags" placeholder="ai, writing, productivity"/></div>
+    <div class="form-row"><label>AI Categories (comma separated)</label><input type="text" id="toolAiCategories" placeholder="NLP, Generative AI"/></div>
+
+    <div class="form-footer">
+      <a class="btn-cancel-form" href="dashboard.html">Cancel</a>
+      <div class="footer-right">
+        <button class="btn-next" id="nextBtn" onclick="goToStep2()">
+          Save &amp; Next
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="form-section" id="section-2">
+    <div class="card-title">Tool Details</div>
+    <div class="card-sub">In-depth information shown on the tool page</div>
+
+    <div class="section-label">Description</div>
+    <div class="form-row"><label>Description</label><textarea id="detailDescription" placeholder="Full description of what this tool does..."></textarea></div>
+
+    <div class="section-divider"></div>
+    <div class="section-label">Key Features</div>
+    <div class="form-row">
+      <label>Key Features</label>
+      <div class="quill-wrap features"><div id="quillFeatures"></div></div>
+    </div>
+
+    <div class="section-divider"></div>
+    <div class="section-label">Pros &amp; Cons</div>
+    <div class="form-grid">
+      <div class="form-row">
+        <label>Pros</label>
+        <div class="quill-wrap pros"><div id="quillPros"></div></div>
+      </div>
+      <div class="form-row">
+        <label>Cons</label>
+        <div class="quill-wrap cons"><div id="quillCons"></div></div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+    <div class="section-label">More Details</div>
+    <div class="form-row"><label>Who is using this tool?</label><textarea id="detailToolUsing" placeholder="e.g. Content creators, developers, marketers..."></textarea></div>
+    <div class="form-row"><label>Pricing Details</label><textarea id="detailPricing" placeholder="Describe the pricing plans in detail..."></textarea></div>
+    <div class="form-row"><label>What makes it unique?</label><textarea id="detailUniqueness" placeholder="What sets this tool apart from others?"></textarea></div>
+    <div class="form-row"><label>Our Rating Explanation</label><textarea id="detailOurRating" placeholder="Why did we give it this rating?"></textarea></div>
+    <div class="form-row"><label>Try Other Tools</label><textarea id="detailTryOther" placeholder="Suggest similar tools the user can try..."></textarea></div>
+    <div class="form-row"><label>Disclaimer</label><textarea id="detailDisclaimer" placeholder="Any disclaimer about the tool..."></textarea></div>
+
+    <div class="form-footer">
+      <button class="btn-prev" onclick="goToStep1()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Previous
+      </button>
+      <div class="footer-right">
+        <a class="btn-cancel-form" href="dashboard.html">Cancel</a>
+        <button class="btn-submit" id="submitBtn" onclick="submitAll()">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+          <span id="submitText">Save Tool</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<script>
+  const API = "http://localhost:4000/api";
+  const params = new URLSearchParams(window.location.search);
+  const editId = params.get("id");
+  let existingImage = null;
+  let savedToolId   = null;
+  let pendingDetail = null;
+
+  // ── Quill init ──
+  const quillOpts = (ph) => ({ theme:"snow", placeholder:ph, modules:{ toolbar:[["bold","italic"],[{list:"ordered"},{list:"bullet"}],["clean"]] } });
+  const quillFeatures = new Quill("#quillFeatures", quillOpts("Add key features as bullet points..."));
+  const quillPros     = new Quill("#quillPros",     quillOpts("List the pros..."));
+  const quillCons     = new Quill("#quillCons",     quillOpts("List the cons..."));
+
+  // ── On Load ──
+  window.addEventListener("DOMContentLoaded", async () => {
+    if (editId) {
+      document.getElementById("formTitle").textContent = "Edit AI Tool";
+      document.getElementById("formSub").textContent   = "Update the tool details";
+      savedToolId = editId;
+      await loadTool();
+    }
+  });
+
+  // ── Load tool for edit ──
+  async function loadTool() {
+    try {
+      const res  = await fetch(`${API}/tools/${editId}`, { credentials:"include" });
+      const data = await res.json();
+      if (!data.success) return;
+      const t = data.data;
+
+      document.getElementById("toolName").value         = t.toolName    || "";
+      document.getElementById("toolUrl").value          = t.toolUrl     || "";
+      document.getElementById("toolHeading").value      = t.heading     || "";
+      document.getElementById("toolYoutube").value      = t.youtubeUrl  || "";
+      document.getElementById("toolPricing").value      = t.pricingModel|| "";
+      document.getElementById("toolRating").value       = t.rating      || "";
+      document.getElementById("toolHashtags").value     = (t.hashtags     || []).join(", ");
+      document.getElementById("toolAiCategories").value = (t.aiCategories || []).join(", ");
+
+      if (t.toolImage) {
+        existingImage = t.toolImage;
+        document.getElementById("toolFileName").textContent = "Current image saved";
+        document.getElementById("toolPreview").src = t.toolImage.startsWith("http") ? t.toolImage : `http://localhost:4000${t.toolImage}`;
+        document.getElementById("toolPreviewWrap").style.display = "block";
+      }
+
+      // ── KEY FIX: aiToolDetail may be a populated object OR a plain id string ──
+      if (t.aiToolDetail) {
+        const detail = t.aiToolDetail;
+        if (typeof detail === "object" && detail._id) {
+          // already populated — use directly, no extra fetch needed
+          pendingDetail = detail;
+        } else {
+          // plain ObjectId string — fetch the detail
+          const r2 = await fetch(`${API}/tools/detail/${detail.toString()}`, { credentials:"include" });
+          const d2 = await r2.json();
+          if (d2.success) pendingDetail = d2.data;
+        }
+      }
+    } catch (err) {
+      console.error("loadTool error:", err);
+    }
+  }
+
+  // ── Populate step 2 fields — called AFTER section-2 is visible ──
+  function populateStep2() {
+    if (!pendingDetail) return;
+    const d = pendingDetail;
+
+    document.getElementById("detailDescription").value = d.description || "";
+    document.getElementById("detailToolUsing").value   = d.toolUsing   || "";
+    document.getElementById("detailPricing").value     = d.pricing     || "";
+    document.getElementById("detailUniqueness").value  = d.uniqueness  || "";
+    document.getElementById("detailOurRating").value   = d.ourRating   || "";
+    document.getElementById("detailTryOther").value    = d.tryOther    || "";
+    document.getElementById("detailDisclaimer").value  = d.disclaimer  || "";
+
+    // Quill editors are now visible — set content
+    if (d.keyFeatures) quillFeatures.root.innerHTML = d.keyFeatures;
+    if (d.pros)        quillPros.root.innerHTML     = d.pros;
+    if (d.cons)        quillCons.root.innerHTML     = d.cons;
+
+    pendingDetail = null;
+  }
+
+  // ── Navigation ──
+  function goToStep2() {
+    if (!document.getElementById("toolName").value.trim()) return showAlert("error", "Tool name is required.");
+    const btn = document.getElementById("nextBtn");
+    btn.disabled    = true;
+    btn.textContent = "Saving...";
+    saveStep1().then(ok => {
+      btn.disabled = false;
+      btn.innerHTML = `Save &amp; Next <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>`;
+      if (ok) switchStep(2);
+    });
+  }
+
+  function goToStep1() { switchStep(1); }
+
+  function switchStep(step) {
+    document.querySelectorAll(".form-section").forEach(s => s.classList.remove("active"));
+    document.getElementById(`section-${step}`).classList.add("active");
+
+    for (let i = 1; i <= 2; i++) {
+      const se = document.getElementById(`step-${i}`);
+      const ne = document.getElementById(`stepnum-${i}`);
+      se.classList.remove("active","completed");
+      if      (i < step)  { se.classList.add("completed"); ne.innerHTML = `<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`; }
+      else if (i === step) { se.classList.add("active"); ne.textContent = i; }
+      else                  { ne.textContent = i; }
+    }
+
+    document.getElementById("progressFill").style.width = step === 1 ? "50%" : "100%";
+    window.scrollTo({ top:0, behavior:"smooth" });
+
+    // Quill editors only work when section is visible
+    if (step === 2) populateStep2();
+  }
+
+  // ── Save Step 1 ──
+  async function saveStep1() {
+    const toolName = document.getElementById("toolName").value.trim();
+    if (!toolName) { showAlert("error","Tool name is required."); return false; }
+
+    const fd = new FormData();
+    fd.append("toolName",     toolName);
+    fd.append("toolUrl",      document.getElementById("toolUrl").value.trim());
+    fd.append("heading",      document.getElementById("toolHeading").value.trim());
+    fd.append("youtubeUrl",   document.getElementById("toolYoutube").value.trim());
+    fd.append("pricingModel", document.getElementById("toolPricing").value);
+    fd.append("rating",       document.getElementById("toolRating").value || 0);
+
+    document.getElementById("toolHashtags").value.split(",").map(h=>h.trim()).filter(Boolean).forEach(h=>fd.append("hashtags[]",h));
+    document.getElementById("toolAiCategories").value.split(",").map(c=>c.trim()).filter(Boolean).forEach(c=>fd.append("aiCategories[]",c));
+
+    const fi = document.getElementById("toolImageFile");
+    if (fi.files[0])      fd.append("toolImage", fi.files[0]);
+    else if (existingImage) fd.append("toolImage", existingImage);
+
+    try {
+      const url    = savedToolId ? `${API}/tools/${savedToolId}` : `${API}/tools`;
+      const method = savedToolId ? "PUT" : "POST";
+      const res    = await fetch(url, { method, credentials:"include", body:fd });
+      const data   = await res.json();
+      if (data.success) { savedToolId = data.data._id; return true; }
+      showAlert("error", data.message || "Failed to save tool.");
+      return false;
+    } catch { showAlert("error","Server error."); return false; }
+  }
+
+  // ── Submit Step 2 ──
+  async function submitAll() {
+    if (!savedToolId) { showAlert("error","Please complete Step 1 first."); return; }
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    document.getElementById("submitText").textContent = "Saving...";
+
+    try {
+      const res = await fetch(`${API}/tools/detail`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        credentials:"include",
+        body: JSON.stringify({
+          toolId:      savedToolId,
+          description: document.getElementById("detailDescription").value.trim(),
+          keyFeatures: quillFeatures.root.innerHTML,
+          pros:        quillPros.root.innerHTML,
+          cons:        quillCons.root.innerHTML,
+          toolUsing:   document.getElementById("detailToolUsing").value.trim(),
+          pricing:     document.getElementById("detailPricing").value.trim(),
+          uniqueness:  document.getElementById("detailUniqueness").value.trim(),
+          ourRating:   document.getElementById("detailOurRating").value.trim(),
+          tryOther:    document.getElementById("detailTryOther").value.trim(),
+          disclaimer:  document.getElementById("detailDisclaimer").value.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (data.success) { showAlert("success","Tool saved successfully!"); setTimeout(()=>window.location.href="dashboard.html",1400); }
+      else showAlert("error", data.message || "Failed to save tool details.");
+    } catch { showAlert("error","Server error. Please try again."); }
+    finally { btn.disabled=false; document.getElementById("submitText").textContent="Save Tool"; }
+  }
+
+  function previewImage(input, previewId, fileNameId) {
+    if (!input.files || !input.files[0]) return;
+    document.getElementById(fileNameId).textContent = input.files[0].name;
+    const reader = new FileReader();
+    reader.onload = e => { document.getElementById(previewId).src=e.target.result; document.getElementById(previewId+"Wrap").style.display="block"; };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  function showAlert(type, msg) {
+    const el = document.getElementById("alert");
+    el.className = `alert ${type}`; el.textContent = msg; el.style.display="block";
+    if (type==="error") setTimeout(()=>el.style.display="none",4000);
+  }
+</script>
+</body>
+</html>
+

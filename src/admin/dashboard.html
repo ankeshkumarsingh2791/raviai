@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AITools Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0e0f13;
+      --surface: #16181f;
+      --surface2: #1e2029;
+      --border: #2a2d3a;
+      --accent: #6c63ff;
+      --accent2: #ff6584;
+      --accent3: #43e97b;
+      --text: #e8eaf0;
+      --muted: #7b7f93;
+      --sidebar-w: 240px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 24px 20px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-logo span {
+      font-family: 'DM Mono', monospace;
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+
+    .sidebar-logo span em { color: var(--text); font-style: normal; }
+
+    .sidebar-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      padding: 20px 20px 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.15s;
+      border-left: 3px solid transparent;
+      text-decoration: none;
+    }
+
+    .nav-item:hover { color: var(--text); background: var(--surface2); }
+    .nav-item.active { color: var(--accent); background: rgba(108,99,255,0.08); border-left-color: var(--accent); }
+    .nav-item .icon { width: 18px; height: 18px; opacity: 0.8; }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Main ── */
+    .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+    /* ── Header ── */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-title { font-size: 15px; font-weight: 600; color: var(--text); }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .admin-badge {
+      font-size: 12px;
+      font-family: 'DM Mono', monospace;
+      color: var(--accent3);
+      background: rgba(67,233,123,0.1);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(67,233,123,0.2);
+    }
+
+    .btn-logout {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-logout:hover { border-color: var(--accent2); color: var(--accent2); }
+
+    /* ── Content ── */
+    .content { padding: 32px; flex: 1; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Page Header ── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .page-header h2 { font-size: 22px; font-weight: 700; color: var(--text); }
+    .page-header p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+    /* ── Btn Primary ── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 10px 20px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover { background: #5a52d5; }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead tr {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    td {
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tbody tr:last-child td { border-bottom: none; }
+
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+
+    .thumb {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+
+    .thumb-placeholder {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .badge-free { background: rgba(67,233,123,0.1); color: var(--accent3); border: 1px solid rgba(67,233,123,0.2); }
+    .badge-paid { background: rgba(255,101,132,0.1); color: var(--accent2); border: 1px solid rgba(255,101,132,0.2); }
+    .badge-freemium { background: rgba(108,99,255,0.1); color: var(--accent); border: 1px solid rgba(108,99,255,0.2); }
+    .badge-default { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+    .action-btns { display: flex; gap: 8px; }
+
+    .btn-edit, .btn-delete {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .btn-edit { background: rgba(108,99,255,0.12); color: var(--accent); }
+    .btn-edit:hover { background: rgba(108,99,255,0.25); }
+    .btn-delete { background: rgba(255,101,132,0.1); color: var(--accent2); }
+    .btn-delete:hover { background: rgba(255,101,132,0.25); }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+    }
+
+    .empty-state .empty-icon { font-size: 36px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── Loading ── */
+    .loading {
+      text-align: center;
+      padding: 32px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ── Dashboard home ── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .stat-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .stat-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 16px; }
+    .stat-label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 4px; }
+    .stat-title { font-size: 16px; font-weight: 600; color: var(--text); }
+    .stat-desc { font-size: 12px; color: var(--muted); margin-top: 4px; }
+    .stat-count { font-size: 28px; font-weight: 700; color: var(--accent); margin-bottom: 4px; font-family: 'DM Mono', monospace; }
+
+    .welcome-text { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+    .welcome-text span { color: var(--accent); }
+    .welcome-sub { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+
+    /* ── Confirm modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px;
+      max-width: 380px;
+      width: 90%;
+    }
+
+    .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .modal p { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
+
+    .btn-cancel {
+      padding: 8px 18px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-confirm-delete {
+      padding: 8px 18px;
+      background: var(--accent2);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .text-muted { color: var(--muted); font-size: 12px; }
+    .truncate { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* ── Reviews ── */
+    .filter-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .filter-bar label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      white-space: nowrap;
+    }
+
+    .filter-bar select {
+      flex: 1;
+      padding: 9px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border 0.15s;
+    }
+
+    .filter-bar select:focus { border-color: var(--accent); }
+    .filter-bar select option { background: var(--surface2); }
+
+    .review-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+      transition: border 0.15s;
+    }
+
+    .review-card:hover { border-color: var(--border); }
+
+    .review-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .review-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .review-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .review-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .review-email {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .review-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .review-rating {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--accent3);
+    }
+
+    .review-date {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .review-body {
+      font-size: 14px;
+      color: var(--text);
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+
+    .review-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .btn-publish {
+      padding: 5px 14px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+
+    .btn-publish.published {
+      background: rgba(67,233,123,0.12);
+      color: var(--accent3);
+    }
+
+    .btn-publish.published:hover { background: rgba(67,233,123,0.25); }
+
+    .btn-publish.unpublished {
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-publish.unpublished:hover { border-color: var(--accent3); color: var(--accent3); }
+
+    .review-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .review-status.published { color: var(--accent3); }
+    .review-status.unpublished { color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<!-- ── Delete Confirm Modal ── -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>Confirm Delete</h3>
+    <p id="deleteModalMsg">Are you sure you want to delete this item? This cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn-confirm-delete" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <span>AI<em>Tools</em></span>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px;">Admin Panel</div>
+  </div>
+
+  <div class="sidebar-label">Manage</div>
+  <a class="nav-item active" onclick="showPage('home', this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    Dashboard
+  </a>
+  <a class="nav-item" onclick="showPage('categories', this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+    Categories
+  </a>
+  <a class="nav-item" onclick="showPage('subcategories', this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+    Sub Categories
+  </a>
+  <a class="nav-item" onclick="showPage('tools', this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+    AI Tools
+  </a>
+  <a class="nav-item" onclick="showPage('reviews', this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+    Reviews
+  </a>
+  <a class="nav-item" onclick="showPage('unpublished', this)">
+    <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 4.411m0 0L21 21"/></svg>
+    Unpublished Reviews
+  </a>
+
+  <div class="sidebar-bottom">
+    <button class="btn-logout" onclick="handleLogout()" style="width:100%;justify-content:center;">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+      Logout
+    </button>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<div class="main">
+  <header class="header">
+    <div class="header-title" id="headerTitle">Dashboard</div>
+    <div class="header-right">
+      <span class="admin-badge" id="adminName">Admin</span>
+      <button class="btn-logout" onclick="handleLogout()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ── Home ── -->
+    <div class="page active" id="page-home">
+      <div class="welcome-text">Welcome back, <span id="welcomeName">Admin</span> 👋</div>
+      <div class="welcome-sub">Here's an overview of your platform.</div>
+      <div class="stats-grid">
+        <div class="stat-card" onclick="window.location.href='category-form.html'">
+          <div class="stat-icon" style="background:rgba(108,99,255,0.12);">🗂️</div>
+          <div class="stat-count" id="countCat">—</div>
+          <div class="stat-title">Categories</div>
+          <div class="stat-desc">Manage top-level categories</div>
+        </div>
+        <div class="stat-card" onclick="window.location.href='subcategory-form.html'">
+          <div class="stat-icon" style="background:rgba(255,101,132,0.12);">📁</div>
+          <div class="stat-count" id="countSub">—</div>
+          <div class="stat-title">Sub Categories</div>
+          <div class="stat-desc">Manage sub categories</div>
+        </div>
+        <div class="stat-card" onclick="window.location.href='tool-form.html'">
+          <div class="stat-icon" style="background:rgba(67,233,123,0.12);">🤖</div>
+          <div class="stat-count" id="countTools">—</div>
+          <div class="stat-title">AI Tools</div>
+          <div class="stat-desc">Manage listed AI tools</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Categories ── -->
+    <div class="page" id="page-categories">
+      <div class="page-header">
+        <div>
+          <h2>Categories</h2>
+          <p>All top-level AI tool categories</p>
+        </div>
+        <a class="btn-primary" href="category-form.html">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Add Category
+        </a>
+      </div>
+      <div class="table-wrap">
+        <div id="cat-loading" class="loading">Loading...</div>
+        <table id="cat-table" style="display:none">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Name</th>
+              <th>Sub Heading</th>
+              <th>Sub Categories</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="cat-tbody"></tbody>
+        </table>
+        <div id="cat-empty" class="empty-state" style="display:none">
+          <div class="empty-icon">🗂️</div>
+          <p>No categories yet. <a href="category-form.html" style="color:var(--accent)">Create one</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Sub Categories ── -->
+    <div class="page" id="page-subcategories">
+      <div class="page-header">
+        <div>
+          <h2>Sub Categories</h2>
+          <p>All subcategories linked to categories</p>
+        </div>
+        <a class="btn-primary" href="subcategory-form.html">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Add Sub Category
+        </a>
+      </div>
+      <div class="table-wrap">
+        <div id="sub-loading" class="loading">Loading...</div>
+        <table id="sub-table" style="display:none">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Heading</th>
+              <th>Parent Category</th>
+              <th>Tools Count</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="sub-tbody"></tbody>
+        </table>
+        <div id="sub-empty" class="empty-state" style="display:none">
+          <div class="empty-icon">📁</div>
+          <p>No sub categories yet. <a href="subcategory-form.html" style="color:var(--accent)">Create one</a></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AI Tools ── -->
+    <div class="page" id="page-tools">
+      <div class="page-header">
+        <div>
+          <h2>AI Tools</h2>
+          <p>All listed AI tools on the platform</p>
+        </div>
+        <a class="btn-primary" href="tool-form.html">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          Add AI Tool
+        </a>
+      </div>
+      <div class="table-wrap">
+        <div id="tool-loading" class="loading">Loading...</div>
+        <table id="tool-table" style="display:none">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Tool Name</th>
+              <th>Pricing</th>
+              <th>Rating</th>
+              <th>Hashtags</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tool-tbody"></tbody>
+        </table>
+        <div id="tool-empty" class="empty-state" style="display:none">
+          <div class="empty-icon">🤖</div>
+          <p>No tools yet. <a href="tool-form.html" style="color:var(--accent)">Add one</a></p>
+        </div>
+      </div>
+    </div>
+
+  <!-- ── Reviews ── -->
+    <div class="page" id="page-reviews">
+      <div class="page-header">
+        <div>
+          <h2>Manage Reviews</h2>
+          <p>Filter by category, subcategory and tool to manage reviews</p>
+        </div>
+      </div>
+      <div class="filter-bar">
+        <label>Category</label>
+        <select id="reviewCatFilter" onchange="onReviewCatChange()">
+          <option value="">-- Select Category --</option>
+        </select>
+        <label>Sub Category</label>
+        <select id="reviewSubFilter" onchange="onReviewSubChange()">
+          <option value="">-- Select Sub Category --</option>
+        </select>
+        <label>Tool</label>
+        <select id="reviewToolFilter" onchange="loadReviews()">
+          <option value="">-- Select Tool --</option>
+        </select>
+      </div>
+      <div id="review-loading" class="loading" style="display:none">Loading reviews...</div>
+      <div id="review-empty" class="empty-state" style="display:block">
+        <div class="empty-icon">⭐</div>
+        <p id="review-empty-msg">Select a category to begin</p>
+      </div>
+      <div id="review-list"></div>
+    </div>
+
+    <!-- ── Unpublished Reviews ── -->
+<div class="page" id="page-unpublished">
+  <div class="page-header">
+    <div>
+      <h2>Unpublished Reviews</h2>
+      <p>All reviews pending approval</p>
+    </div>
+  </div>
+  <div id="unpublished-loading" class="loading" style="display:none">Loading...</div>
+  <div id="unpublished-empty" class="empty-state" style="display:none">
+    <div class="empty-icon">✅</div>
+    <p>No unpublished reviews — all caught up!</p>
+  </div>
+  <div id="unpublished-list"></div>
+</div>
+
+    </div>
+</div>
+
+<script src="config.js"></script>
+    <script>
+  const API      = CONFIG.API;
+  const BASE_URL = CONFIG.BASE_URL;
+  let deleteTarget = { type: null, id: null };
+
+  // ── Auth check ──
+  window.addEventListener("DOMContentLoaded", async () => {
+    try {
+      const res = await fetch(`${API}/auth/me`, { credentials: "include" });
+      const data = await res.json();
+      if (!data.success || data.data.role !== "admin") { window.location.href = "Login.html"; return; }
+      document.getElementById("adminName").textContent = data.data.name || "Admin";
+      document.getElementById("welcomeName").textContent = data.data.name || "Admin";
+      loadCounts();
+    } catch { window.location.href = "Login.html"; }
+  });
+
+  // ── Navigation ──
+  function showPage(name, el) {
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    document.getElementById("page-" + name).classList.add("active");
+    if (el) el.classList.add("active");
+    const titles = { home: "Dashboard", categories: "Categories", subcategories: "Sub Categories", tools: "AI Tools", reviews: "Manage Reviews", unpublished: "Unpublished Reviews" };
+    document.getElementById("headerTitle").textContent = titles[name] || "Dashboard";
+    if (name === "categories") loadCategories();
+    if (name === "subcategories") loadSubCategories();
+    if (name === "tools") loadTools();
+    if (name === "reviews") loadReviewToolsDropdown();
+    if (name === "unpublished") loadUnpublishedReviews();
+  }
+
+  // ── Logout ──
+  async function handleLogout() {
+    await fetch(`${API}/auth/logout`, { method: "POST", credentials: "include" });
+    window.location.href = "Login.html";
+  }
+
+  // ── Load counts for dashboard ──
+  async function loadCounts() {
+    try {
+      const [cats, subs, tools] = await Promise.all([
+        fetch(`${API}/categories`, { credentials: "include" }).then(r => r.json()),
+        fetch(`${API}/subcategories`, { credentials: "include" }).then(r => r.json()),
+        fetch(`${API}/tools`, { credentials: "include" }).then(r => r.json()),
+      ]);
+      document.getElementById("countCat").textContent = cats.success ? cats.count : "—";
+      document.getElementById("countSub").textContent = subs.success ? subs.count : "—";
+      document.getElementById("countTools").textContent = tools.success ? tools.count : "—";
+    } catch {}
+  }
+
+  // ── Load Categories ──
+  async function loadCategories() {
+    document.getElementById("cat-loading").style.display = "block";
+    document.getElementById("cat-table").style.display = "none";
+    document.getElementById("cat-empty").style.display = "none";
+    try {
+      const res = await fetch(`${API}/categories`, { credentials: "include" });
+      const data = await res.json();
+      document.getElementById("cat-loading").style.display = "none";
+      if (!data.success || !data.data.length) { document.getElementById("cat-empty").style.display = "block"; return; }
+      document.getElementById("cat-table").style.display = "table";
+      const tbody = document.getElementById("cat-tbody");
+      tbody.innerHTML = "";
+      data.data.forEach(cat => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${cat.catImage ? `<img src="${API.replace('/api','')}${cat.catImage}" class="thumb" onerror="this.style.display='none'"/>` : `<div class="thumb-placeholder">🗂️</div>`}</td>
+            <td><strong>${cat.catName}</strong></td>
+            <td class="text-muted truncate">${cat.subHeading || "—"}</td>
+            <td><span class="badge badge-default">${cat.subCategory?.length || 0}</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-edit" onclick="editCategory('${cat._id}')">Edit</button>
+                <button class="btn-delete" onclick="openDeleteModal('category','${cat._id}','${cat.catName}')">Delete</button>
+              </div>
+            </td>
+          </tr>`;
+      });
+    } catch {
+      document.getElementById("cat-loading").style.display = "none";
+      document.getElementById("cat-empty").style.display = "block";
+    }
+  }
+
+  // ── Load Sub Categories ──
+  async function loadSubCategories() {
+    document.getElementById("sub-loading").style.display = "block";
+    document.getElementById("sub-table").style.display = "none";
+    document.getElementById("sub-empty").style.display = "none";
+    try {
+      const res = await fetch(`${API}/subcategories`, { credentials: "include" });
+      const data = await res.json();
+      document.getElementById("sub-loading").style.display = "none";
+      if (!data.success || !data.data.length) { document.getElementById("sub-empty").style.display = "block"; return; }
+      document.getElementById("sub-table").style.display = "table";
+      const tbody = document.getElementById("sub-tbody");
+      tbody.innerHTML = "";
+      data.data.forEach(sub => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${sub.toolSubCategoryImage ? `<img src="${API.replace('/api','')}${sub.toolSubCategoryImage}" class="thumb" onerror="this.style.display='none'"/>` : `<div class="thumb-placeholder">📁</div>`}</td>
+            <td><strong>${sub.heading}</strong></td>
+            <td class="text-muted">${sub.toolCategory?.catName || "—"}</td>
+            <td><span class="badge badge-default">${sub.toolsListing?.length || 0}</span></td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-edit" onclick="editSubCategory('${sub._id}')">Edit</button>
+                <button class="btn-delete" onclick="openDeleteModal('subcategory','${sub._id}','${sub.heading}')">Delete</button>
+              </div>
+            </td>
+          </tr>`;
+      });
+    } catch {
+      document.getElementById("sub-loading").style.display = "none";
+      document.getElementById("sub-empty").style.display = "block";
+    }
+  }
+
+  // ── Load Tools ──
+  async function loadTools() {
+    document.getElementById("tool-loading").style.display = "block";
+    document.getElementById("tool-table").style.display = "none";
+    document.getElementById("tool-empty").style.display = "none";
+    try {
+      const res = await fetch(`${API}/tools`, { credentials: "include" });
+      const data = await res.json();
+      document.getElementById("tool-loading").style.display = "none";
+      if (!data.success || !data.data.length) { document.getElementById("tool-empty").style.display = "block"; return; }
+      document.getElementById("tool-table").style.display = "table";
+      const tbody = document.getElementById("tool-tbody");
+      tbody.innerHTML = "";
+      data.data.forEach(tool => {
+        const pricingClass = { Free: "badge-free", Paid: "badge-paid", Freemium: "badge-freemium" }[tool.pricingModel] || "badge-default";
+        const tags = (tool.hashtags || []).slice(0, 3).map(h => `<span class="badge badge-default">#${h}</span>`).join(" ");
+        tbody.innerHTML += `
+          <tr>
+            <td>${tool.toolImage ? `<img src="${tool.toolImage}" class="thumb" onerror="this.style.display='none'"/>` : `<div class="thumb-placeholder">🤖</div>`}</td>
+            <td><strong>${tool.toolName}</strong><br/><span class="text-muted">${tool.heading || ""}</span></td>
+            <td><span class="badge ${pricingClass}">${tool.pricingModel || "—"}</span></td>
+            <td><span style="color:var(--accent3);font-family:'DM Mono',monospace">★ ${tool.rating || 0}</span></td>
+            <td style="max-width:160px">${tags || "<span class='text-muted'>—</span>"}</td>
+            <td>
+              <div class="action-btns">
+                <button class="btn-edit" onclick="editTool('${tool._id}')">Edit</button>
+                <button class="btn-delete" onclick="openDeleteModal('tool','${tool._id}','${tool.toolName}')">Delete</button>
+              </div>
+            </td>
+          </tr>`;
+      });
+    } catch {
+      document.getElementById("tool-loading").style.display = "none";
+      document.getElementById("tool-empty").style.display = "block";
+    }
+  }
+
+  // ── Edit → redirect to form with id in URL ──
+  function editCategory(id) { window.location.href = `category-form.html?id=${id}`; }
+  function editSubCategory(id) { window.location.href = `subcategory-form.html?id=${id}`; }
+  function editTool(id) { window.location.href = `tool-form.html?id=${id}`; }
+
+  // ── Delete Modal ──
+  function openDeleteModal(type, id, name) {
+    deleteTarget = { type, id };
+    document.getElementById("deleteModalMsg").textContent = `Are you sure you want to delete "${name}"? This cannot be undone.`;
+    document.getElementById("deleteModal").classList.add("show");
+  }
+
+  function closeDeleteModal() {
+    document.getElementById("deleteModal").classList.remove("show");
+    deleteTarget = { type: null, id: null };
+  }
+
+  async function confirmDelete() {
+    const { type, id } = deleteTarget;
+    const endpoints = { category: "categories", subcategory: "subcategories", tool: "tools" };
+    const endpoint = endpoints[type];
+    if (!endpoint) return;
+    try {
+      await fetch(`${API}/${endpoint}/${id}`, { method: "DELETE", credentials: "include" });
+      closeDeleteModal();
+      if (type === "category") loadCategories();
+      if (type === "subcategory") loadSubCategories();
+      if (type === "tool") loadTools();
+      loadCounts();
+    } catch { closeDeleteModal(); }
+  }
+
+  // ── Load categories into review dropdown ──
+  async function loadReviewToolsDropdown() {
+    try {
+      const res  = await fetch(`${API}/categories`, { credentials: "include" });
+      const data = await res.json();
+      const sel  = document.getElementById("reviewCatFilter");
+      sel.innerHTML = '<option value="">-- Select Category --</option>';
+      if (data.success) {
+        data.data.forEach(cat => {
+          const opt = document.createElement("option");
+          opt.value       = cat._id;
+          opt.textContent = cat.catName;
+          sel.appendChild(opt);
+        });
+      }
+      document.getElementById("reviewSubFilter").innerHTML  = '<option value="">-- Select Sub Category --</option>';
+      document.getElementById("reviewToolFilter").innerHTML = '<option value="">-- Select Tool --</option>';
+      document.getElementById("review-list").innerHTML      = "";
+      document.getElementById("review-empty").style.display = "block";
+      document.getElementById("review-empty-msg").textContent = "Select a category to begin";
+    } catch {}
+  }
+
+  async function onReviewCatChange() {
+    const catId   = document.getElementById("reviewCatFilter").value;
+    const subSel  = document.getElementById("reviewSubFilter");
+    const toolSel = document.getElementById("reviewToolFilter");
+
+    subSel.innerHTML  = '<option value="">-- Select Sub Category --</option>';
+    toolSel.innerHTML = '<option value="">-- Select Tool --</option>';
+    document.getElementById("review-list").innerHTML      = "";
+    document.getElementById("review-empty").style.display = "block";
+    document.getElementById("review-empty-msg").textContent = "Select a sub category";
+
+    if (!catId) return;
+    try {
+      const res  = await fetch(`${API}/subcategories/by-category/${catId}`, { credentials: "include" });
+      const data = await res.json();
+      if (data.success) {
+        data.data.forEach(sub => {
+          const opt = document.createElement("option");
+          opt.value       = sub._id;
+          opt.textContent = sub.heading;
+          subSel.appendChild(opt);
+        });
+      }
+    } catch {}
+  }
+
+  async function onReviewSubChange() {
+    const subId   = document.getElementById("reviewSubFilter").value;
+    const toolSel = document.getElementById("reviewToolFilter");
+
+    toolSel.innerHTML = '<option value="">-- Select Tool --</option>';
+    document.getElementById("review-list").innerHTML      = "";
+    document.getElementById("review-empty").style.display = "block";
+    document.getElementById("review-empty-msg").textContent = "Select a tool to view reviews";
+
+    if (!subId) return;
+    try {
+      const res  = await fetch(`${API}/tools/subcategory/${subId}`, { credentials: "include" });
+      const data = await res.json();
+      if (data.success) {
+        data.data.forEach(tool => {
+          const opt = document.createElement("option");
+          opt.value       = tool._id;
+          opt.textContent = tool.toolName;
+          toolSel.appendChild(opt);
+        });
+      }
+    } catch {}
+  }
+
+  // ── Load reviews for selected tool ──
+  async function loadReviews() {
+    const toolId = document.getElementById("reviewToolFilter").value;
+    const listEl   = document.getElementById("review-list");
+    const emptyEl  = document.getElementById("review-empty");
+    const loadEl   = document.getElementById("review-loading");
+
+    listEl.innerHTML = "";
+    emptyEl.style.display   = "none";
+    loadEl.style.display    = "none";
+
+    if (!toolId) {
+      emptyEl.style.display = "block";
+      document.getElementById("review-empty-msg").textContent = "Select a tool above to view its reviews";
+      return;
+    }
+
+    loadEl.style.display = "block";
+
+    try {
+      const res  = await fetch(`${API}/reviews/tool/${toolId}`, { credentials: "include" });
+      const data = await res.json();
+      loadEl.style.display = "none";
+
+      if (!data.success || !data.data.length) {
+        emptyEl.style.display = "block";
+        document.getElementById("review-empty-msg").textContent = "No reviews for this tool yet";
+        return;
+      }
+
+      data.data.forEach(review => {
+        const initial  = (review.user?.name || "U")[0].toUpperCase();
+        const stars    = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+        const date     = new Date(review.createdAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+        const isPublished = review.published;
+
+        const card = document.createElement("div");
+        card.className = "review-card";
+        card.id = `review-${review._id}`;
+        card.innerHTML = `
+          <div class="review-header">
+            <div class="review-user">
+              <div class="review-avatar">${initial}</div>
+              <div>
+                <div class="review-name">${review.user?.name || "Unknown"}</div>
+                <div class="review-email">${review.user?.email || ""}</div>
+              </div>
+            </div>
+            <div class="review-meta">
+              <span class="review-rating">${stars} ${review.rating}/5</span>
+              <span class="review-date">${date}</span>
+              <span class="review-status ${isPublished ? 'published' : 'unpublished'}">
+                ${isPublished ? "● Published" : "○ Unpublished"}
+              </span>
+            </div>
+          </div>
+          <div class="review-body">${review.description}</div>
+          <div class="review-actions">
+            <button class="btn-publish ${isPublished ? 'published' : 'unpublished'}" onclick="toggleReview('${review._id}', this)">
+              ${isPublished ? "Unpublish" : "Publish"}
+            </button>
+            <button class="btn-delete" onclick="deleteReview('${review._id}')">Delete</button>
+          </div>
+        `;
+        listEl.appendChild(card);
+      });
+    } catch {
+      loadEl.style.display   = "none";
+      emptyEl.style.display  = "block";
+      document.getElementById("review-empty-msg").textContent = "Failed to load reviews";
+    }
+  }
+
+  // ── Toggle publish ──
+  async function toggleReview(id, btn) {
+    try {
+      const res  = await fetch(`${API}/reviews/${id}/toggle`, { method: "PATCH", credentials: "include" });
+      const data = await res.json();
+      if (!data.success) return;
+
+      const isPublished = data.data.published;
+      const card = document.getElementById(`review-${id}`);
+
+      // update button
+      btn.className  = `btn-publish ${isPublished ? "published" : "unpublished"}`;
+      btn.textContent = isPublished ? "Unpublish" : "Publish";
+
+      // update status badge
+      const statusEl = card.querySelector(".review-status");
+      statusEl.className   = `review-status ${isPublished ? "published" : "unpublished"}`;
+      statusEl.textContent = isPublished ? "● Published" : "○ Unpublished";
+    } catch {}
+  }
+
+  // ── Delete review ──
+  async function deleteReview(id) {
+    if (!confirm("Delete this review? This cannot be undone.")) return;
+    try {
+      const res  = await fetch(`${API}/reviews/${id}`, { method: "DELETE", credentials: "include" });
+      const data = await res.json();
+      if (data.success) {
+        const card = document.getElementById(`review-${id}`);
+        if (card) card.remove();
+        // show empty if no reviews left
+        if (!document.getElementById("review-list").children.length) {
+          document.getElementById("review-empty").style.display = "block";
+          document.getElementById("review-empty-msg").textContent = "No reviews for this tool yet";
+        }
+      }
+    } catch {}
+  }
+
+  async function loadUnpublishedReviews() {
+  const listEl  = document.getElementById("unpublished-list");
+  const emptyEl = document.getElementById("unpublished-empty");
+  const loadEl  = document.getElementById("unpublished-loading");
+
+  listEl.innerHTML = "";
+  emptyEl.style.display = "none";
+  loadEl.style.display  = "block";
+
+  try {
+    const res  = await fetch(`${API}/reviews/unpublished`, { credentials: "include" });
+    const data = await res.json();
+    loadEl.style.display = "none";
+
+    if (!data.success || !data.data.length) {
+      emptyEl.style.display = "block";
+      return;
+    }
+
+    data.data.forEach(review => {
+      const initial     = (review.user?.name || "U")[0].toUpperCase();
+      const stars       = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+      const date        = new Date(review.createdAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
+      const toolName    = review.tool?.toolName || "Unknown Tool";
+      const toolImage   = review.tool?.toolImage;
+
+      const card = document.createElement("div");
+      card.className = "review-card";
+      card.id = `unpub-${review._id}`;
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+          ${toolImage ? `<img src="${toolImage}" style="width:28px;height:28px;border-radius:6px;object-fit:cover;border:1px solid var(--border)"/>` : `<div style="width:28px;height:28px;border-radius:6px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:14px">🤖</div>`}
+          <span style="font-size:13px;font-weight:600;color:var(--accent)">${toolName}</span>
+        </div>
+        <div class="review-header">
+          <div class="review-user">
+            <div class="review-avatar">${initial}</div>
+            <div>
+              <div class="review-name">${review.user?.name || "Unknown"}</div>
+              <div class="review-email">${review.user?.email || ""}</div>
+            </div>
+          </div>
+          <div class="review-meta">
+            <span class="review-rating">${stars} ${review.rating}/5</span>
+            <span class="review-date">${date}</span>
+          </div>
+        </div>
+        <div class="review-body">${review.description}</div>
+        <div class="review-actions">
+          <button class="btn-publish unpublished" onclick="publishFromUnpublished('${review._id}', this)">Publish</button>
+          <button class="btn-delete" onclick="deleteFromUnpublished('${review._id}')">Delete</button>
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+  } catch {
+    loadEl.style.display  = "none";
+    emptyEl.style.display = "block";
+  }
+}
+
+async function publishFromUnpublished(id, btn) {
+  try {
+    const res  = await fetch(`${API}/reviews/${id}/toggle`, { method: "PATCH", credentials: "include" });
+    const data = await res.json();
+    if (data.success && data.data.published) {
+      // remove from unpublished list
+      document.getElementById(`unpub-${id}`)?.remove();
+      if (!document.getElementById("unpublished-list").children.length) {
+        document.getElementById("unpublished-empty").style.display = "block";
+      }
+    }
+  } catch {}
+}
+
+async function deleteFromUnpublished(id) {
+  if (!confirm("Delete this review? This cannot be undone.")) return;
+  try {
+    const res  = await fetch(`${API}/reviews/${id}`, { method: "DELETE", credentials: "include" });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById(`unpub-${id}`)?.remove();
+      if (!document.getElementById("unpublished-list").children.length) {
+        document.getElementById("unpublished-empty").style.display = "block";
+      }
+    }
+  } catch {}
+}
+</script>
+</body>
+</html>

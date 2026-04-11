@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sub Category Form – AITools Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#0e0f13; --surface:#16181f; --surface2:#1e2029; --border:#2a2d3a; --accent:#6c63ff; --accent2:#ff6584; --accent3:#43e97b; --text:#e8eaf0; --muted:#7b7f93; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:40px 16px; }
+    .back-btn { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:13px; text-decoration:none; margin-bottom:24px; align-self:flex-start; max-width:640px; width:100%; transition:color 0.15s; }
+    .back-btn:hover { color:var(--text); }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:32px; width:100%; max-width:640px; }
+    .card-title { font-size:20px; font-weight:700; margin-bottom:4px; }
+    .card-sub { font-size:13px; color:var(--muted); margin-bottom:28px; }
+    .form-row { margin-bottom:20px; }
+    .form-row label { display:block; font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px; }
+    .form-row input, .form-row textarea, .form-row select { width:100%; padding:11px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; font-family:'DM Sans',sans-serif; outline:none; transition:border 0.15s; }
+    .form-row input:focus, .form-row textarea:focus, .form-row select:focus { border-color:var(--accent); }
+    .form-row textarea { resize:vertical; min-height:100px; }
+    .form-row select option { background:var(--surface2); }
+    .file-input { display:none; }
+    .file-label { display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-size:14px; color:var(--muted); transition:border 0.15s; }
+    .file-label:hover { border-color:var(--accent); color:var(--text); }
+    .file-label span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .preview-wrap { margin-top:10px; display:none; }
+    .preview-wrap img { width:64px; height:64px; border-radius:8px; object-fit:cover; border:1px solid var(--border); }
+    .alert { padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:20px; display:none; }
+    .alert.success { background:rgba(67,233,123,0.1); border:1px solid rgba(67,233,123,0.25); color:var(--accent3); }
+    .alert.error { background:rgba(255,101,132,0.1); border:1px solid rgba(255,101,132,0.25); color:var(--accent2); }
+    .form-footer { display:flex; gap:12px; margin-top:8px; }
+    .btn-submit { display:inline-flex; align-items:center; gap:8px; padding:11px 24px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:background 0.15s; }
+    .btn-submit:hover { background:#5a52d5; }
+    .btn-submit:disabled { background:#3d3a6e; color:var(--muted); cursor:not-allowed; }
+    .btn-cancel-form { display:inline-flex; align-items:center; padding:11px 24px; background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-size:14px; font-family:'DM Sans',sans-serif; cursor:pointer; text-decoration:none; transition:all 0.15s; }
+    .btn-cancel-form:hover { border-color:var(--text); color:var(--text); }
+  </style>
+</head>
+<body>
+  <a class="back-btn" href="dashboard.html">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    Back to Dashboard
+  </a>
+
+  <div class="card">
+    <div class="card-title" id="formTitle">Create Sub Category</div>
+    <div class="card-sub" id="formSub">Add a subcategory under an existing category</div>
+
+    <div class="alert" id="alert"></div>
+
+    <div class="form-row">
+      <label>Parent Category *</label>
+      <select id="subCatParent">
+        <option value="">-- Select a Category --</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>Heading *</label>
+      <input type="text" id="subHeading" placeholder="e.g. Blog Writing" />
+    </div>
+    <div class="form-row">
+      <label>Description</label>
+      <textarea id="subDescription" placeholder="Brief description of this subcategory..."></textarea>
+    </div>
+    <div class="form-row">
+      <label>Sub Category Image</label>
+      <input type="file" class="file-input" id="subImageFile" accept="image/*" onchange="previewImage(this, 'subPreview', 'subFileName')" />
+      <label class="file-label" for="subImageFile">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        <span id="subFileName">Click to upload image</span>
+      </label>
+      <div class="preview-wrap" id="subPreviewWrap">
+        <img id="subPreview" src="" alt="preview" />
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <button class="btn-submit" id="submitBtn" onclick="submitForm()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span id="submitText">Create Sub Category</span>
+      </button>
+      <a class="btn-cancel-form" href="dashboard.html">Cancel</a>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+    <script>
+  const API      = CONFIG.API;
+  const BASE_URL = CONFIG.BASE_URL;
+  const params = new URLSearchParams(window.location.search);
+  const editId = params.get("id");
+  let existingImage = null;
+
+  window.addEventListener("DOMContentLoaded", async () => {
+     try {
+    // ✅ Admin check
+    const res = await fetch(`${API}/auth/me`, { credentials: "include" });
+    const data = await res.json();
+
+    if (!data.success || data.data.role !== "admin") {
+      window.location.href = "Login.html";
+      return;
+    }
+  
+
+    await loadCategories();
+    if (editId) {
+      document.getElementById("formTitle").textContent = "Edit Sub Category";
+      document.getElementById("formSub").textContent = "Update the sub category details";
+      document.getElementById("submitText").textContent = "Update Sub Category";
+      await loadSubCategory();
+    }
+  }catch (err) {
+    window.location.href = "Login.html";
+  }
+  });
+
+  async function loadCategories() {
+    try {
+      const res = await fetch(`${API}/categories`, { credentials: "include" });
+      const data = await res.json();
+      const select = document.getElementById("subCatParent");
+      if (data.success) {
+        data.data.forEach(cat => {
+          const opt = document.createElement("option");
+          opt.value = cat._id;
+          opt.textContent = cat.catName;
+          select.appendChild(opt);
+        });
+      }
+    } catch {}
+  }
+
+  async function loadSubCategory() {
+    try {
+      const res = await fetch(`${API}/subcategories/${editId}`, { credentials: "include" });
+      const data = await res.json();
+      if (!data.success) return;
+      const sub = data.data;
+      document.getElementById("subCatParent").value = sub.toolCategory?._id || sub.toolCategory || "";
+      document.getElementById("subHeading").value = sub.heading || "";
+      document.getElementById("subDescription").value = sub.description || "";
+      if (sub.toolSubCategoryImage) {
+        existingImage = sub.toolSubCategoryImage;
+        document.getElementById("subFileName").textContent = "Current image saved";
+        const wrap = document.getElementById("subPreviewWrap");
+        const img = document.getElementById("subPreview");
+        img.src = `${API.replace('/api','')}${sub.toolSubCategoryImage}`;
+        wrap.style.display = "block";
+      }
+    } catch {}
+  }
+
+  function previewImage(input, previewId, fileNameId) {
+    if (!input.files || !input.files[0]) return;
+    document.getElementById(fileNameId).textContent = input.files[0].name;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById(previewId).src = e.target.result;
+      document.getElementById(previewId + "Wrap").style.display = "block";
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  async function submitForm() {
+    const toolCategory = document.getElementById("subCatParent").value;
+    const heading = document.getElementById("subHeading").value.trim();
+    if (!toolCategory) return showAlert("error", "Please select a parent category.");
+    if (!heading) return showAlert("error", "Heading is required.");
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    document.getElementById("submitText").textContent = editId ? "Updating..." : "Creating...";
+
+    const formData = new FormData();
+    formData.append("toolCategory", toolCategory);
+    formData.append("heading", heading);
+    formData.append("description", document.getElementById("subDescription").value.trim());
+
+    const fileInput = document.getElementById("subImageFile");
+    if (fileInput.files[0]) {
+      formData.append("toolSubCategoryImage", fileInput.files[0]);
+    } else if (existingImage) {
+      formData.append("toolSubCategoryImage", existingImage);
+    }
+
+    try {
+      const url = editId ? `${API}/subcategories/${editId}` : `${API}/subcategories`;
+      const method = editId ? "PUT" : "POST";
+      const res = await fetch(url, { method, credentials: "include", body: formData });
+      const data = await res.json();
+      if (data.success) {
+        showAlert("success", editId ? "Sub Category updated!" : "Sub Category created!");
+        setTimeout(() => window.location.href = "dashboard.html", 1200);
+      } else {
+        showAlert("error", data.message || "Something went wrong.");
+      }
+    } catch {
+      showAlert("error", "Server error. Please try again.");
+    } finally {
+      btn.disabled = false;
+      document.getElementById("submitText").textContent = editId ? "Update Sub Category" : "Create Sub Category";
+    }
+  }
+
+  function showAlert(type, msg) {
+    const el = document.getElementById("alert");
+    el.className = `alert ${type}`;
+    el.textContent = msg;
+    el.style.display = "block";
+    if (type === "error") setTimeout(() => el.style.display = "none", 4000);
+  }
+</script>
+</body>
+</html>

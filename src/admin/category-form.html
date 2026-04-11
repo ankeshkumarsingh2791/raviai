@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Category Form – AITools Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root { --bg:#0e0f13; --surface:#16181f; --surface2:#1e2029; --border:#2a2d3a; --accent:#6c63ff; --accent2:#ff6584; --accent3:#43e97b; --text:#e8eaf0; --muted:#7b7f93; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:40px 16px; }
+    .back-btn { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:13px; text-decoration:none; margin-bottom:24px; align-self:flex-start; max-width:640px; width:100%; transition:color 0.15s; }
+    .back-btn:hover { color:var(--text); }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:32px; width:100%; max-width:640px; }
+    .card-title { font-size:20px; font-weight:700; margin-bottom:4px; }
+    .card-sub { font-size:13px; color:var(--muted); margin-bottom:28px; }
+    .form-row { margin-bottom:20px; }
+    .form-row label { display:block; font-size:12px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.8px; margin-bottom:8px; }
+    .form-row input, .form-row textarea { width:100%; padding:11px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; font-family:'DM Sans',sans-serif; outline:none; transition:border 0.15s; }
+    .form-row input:focus, .form-row textarea:focus { border-color:var(--accent); }
+    .form-row textarea { resize:vertical; min-height:100px; }
+    .file-wrap { position:relative; }
+    .file-input { display:none; }
+    .file-label { display:flex; align-items:center; gap:10px; padding:11px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; cursor:pointer; font-size:14px; color:var(--muted); transition:border 0.15s; }
+    .file-label:hover { border-color:var(--accent); color:var(--text); }
+    .file-label span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .preview-wrap { margin-top:10px; display:none; }
+    .preview-wrap img { width:64px; height:64px; border-radius:8px; object-fit:cover; border:1px solid var(--border); }
+    .alert { padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:20px; display:none; }
+    .alert.success { background:rgba(67,233,123,0.1); border:1px solid rgba(67,233,123,0.25); color:var(--accent3); }
+    .alert.error { background:rgba(255,101,132,0.1); border:1px solid rgba(255,101,132,0.25); color:var(--accent2); }
+    .form-footer { display:flex; gap:12px; margin-top:8px; }
+    .btn-submit { display:inline-flex; align-items:center; gap:8px; padding:11px 24px; background:var(--accent); color:#fff; border:none; border-radius:8px; font-size:14px; font-weight:600; font-family:'DM Sans',sans-serif; cursor:pointer; transition:background 0.15s; }
+    .btn-submit:hover { background:#5a52d5; }
+    .btn-submit:disabled { background:#3d3a6e; color:var(--muted); cursor:not-allowed; }
+    .btn-cancel-form { display:inline-flex; align-items:center; padding:11px 24px; background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--muted); font-size:14px; font-family:'DM Sans',sans-serif; cursor:pointer; text-decoration:none; transition:all 0.15s; }
+    .btn-cancel-form:hover { border-color:var(--text); color:var(--text); }
+  </style>
+</head>
+<body>
+  <a class="back-btn" href="dashboard.html">
+    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    Back to Dashboard
+  </a>
+
+  <div class="card">
+    <div class="card-title" id="formTitle">Create Category</div>
+    <div class="card-sub" id="formSub">Add a new top-level category for AI tools</div>
+
+    <div class="alert" id="alert"></div>
+
+    <div class="form-row">
+      <label>Category Name *</label>
+      <input type="text" id="catName" placeholder="e.g. Writing Tools" />
+    </div>
+    <div class="form-row">
+      <label>Sub Heading</label>
+      <input type="text" id="catSubHeading" placeholder="e.g. AI-powered writing assistants" />
+    </div>
+    <div class="form-row">
+      <label>Description</label>
+      <textarea id="catDescription" placeholder="Brief description of this category..."></textarea>
+    </div>
+    <div class="form-row">
+      <label>Category Image</label>
+      <div class="file-wrap">
+        <input type="file" class="file-input" id="catImageFile" accept="image/*" onchange="previewImage(this, 'catPreview', 'catFileName')" />
+        <label class="file-label" for="catImageFile">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span id="catFileName">Click to upload image</span>
+        </label>
+        <div class="preview-wrap" id="catPreviewWrap">
+          <img id="catPreview" src="" alt="preview" />
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Banner Ad Image</label>
+      <div class="file-wrap">
+        <input type="file" class="file-input" id="displayAdFile" accept="image/*" onchange="previewImage(this, 'adPreview', 'adFileName')" />
+        <label class="file-label" for="displayAdFile">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span id="adFileName">Click to upload banner ad</span>
+        </label>
+        <div class="preview-wrap" id="adPreviewWrap">
+          <img id="adPreview" src="" alt="ad preview" />
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Banner Ad URL</label>
+      <input type="text" id="adUrl" placeholder="https://advertiser.com" />
+    </div>
+    <div class="form-row">
+      <label>Sidebar Ad Image</label>
+      <div class="file-wrap">
+        <input type="file" class="file-input" id="displayAdSidebarFile" accept="image/*" onchange="previewImage(this, 'sidebarAdPreview', 'sidebarAdFileName')" />
+        <label class="file-label" for="displayAdSidebarFile">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          <span id="sidebarAdFileName">Click to upload sidebar ad</span>
+        </label>
+        <div class="preview-wrap" id="sidebarAdPreviewWrap">
+          <img id="sidebarAdPreview" src="" alt="sidebar ad preview" />
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Sidebar Ad URL</label>
+      <input type="text" id="sidebarAdUrl" placeholder="https://advertiser.com" />
+    </div>
+
+    <div class="form-footer">
+      <button class="btn-submit" id="submitBtn" onclick="submitForm()">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span id="submitText">Create Category</span>
+      </button>
+      <a class="btn-cancel-form" href="dashboard.html">Cancel</a>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+    <script>
+      const API      = CONFIG.API;
+  const BASE_URL = CONFIG.BASE_URL;
+  // const API = "http://localhost:4000/api";
+  const params = new URLSearchParams(window.location.search);
+  const editId = params.get("id");
+  let existingImage          = null;
+  let existingAdImage        = null;
+  let existingAdSidebarImage = null;
+
+  window.addEventListener("DOMContentLoaded", async () => {
+
+    try {
+    // ✅ Admin check
+    const res = await fetch(`${API}/auth/me`, { credentials: "include" });
+    const data = await res.json();
+
+    if (!data.success || data.data.role !== "admin") {
+      window.location.href = "Login.html";
+      return;
+    }
+    
+    if (editId) {
+      document.getElementById("formTitle").textContent = "Edit Category";
+      document.getElementById("formSub").textContent = "Update the category details";
+      document.getElementById("submitText").textContent = "Update Category";
+      await loadCategory();
+    }
+    }catch (err) {
+    window.location.href = "Login.html";
+  }
+  });
+
+  async function loadCategory() {
+    try {
+      const res = await fetch(`${API}/categories/${editId}`, { credentials: "include" });
+      const data = await res.json();
+      if (!data.success) return;
+      const cat = data.data;
+      document.getElementById("catName").value = cat.catName || "";
+      document.getElementById("catSubHeading").value = cat.subHeading || "";
+      document.getElementById("catDescription").value = cat.description || "";
+      if (cat.catImage) {
+        existingImage = cat.catImage;
+        document.getElementById("catFileName").textContent = "Current image saved";
+        const wrap = document.getElementById("catPreviewWrap");
+        const img = document.getElementById("catPreview");
+        img.src = `${API.replace('/api','')}${cat.catImage}`;
+        wrap.style.display = "block";
+      }
+      if (cat.displayAd) {
+        existingAdImage = cat.displayAd;
+        document.getElementById("adFileName").textContent = "Current banner ad saved";
+        const wrap = document.getElementById("adPreviewWrap");
+        const img = document.getElementById("adPreview");
+        img.src = `${API.replace('/api','')}${cat.displayAd}`;
+        wrap.style.display = "block";
+      }
+
+      document.getElementById("adUrl").value = cat.adUrl || "";
+      
+      if (cat.displayAdSidebar) {
+        existingAdSidebarImage = cat.displayAdSidebar;
+        document.getElementById("sidebarAdFileName").textContent = "Current sidebar ad saved";
+        const wrap = document.getElementById("sidebarAdPreviewWrap");
+        const img = document.getElementById("sidebarAdPreview");
+        img.src = `${API.replace('/api','')}${cat.displayAdSidebar}`;
+        wrap.style.display = "block";
+      }
+
+      document.getElementById("sidebarAdUrl").value = cat.sidebarAdUrl || "";
+
+    } catch (error) {
+      console.error("Error loading category:", error);
+    }
+  }
+
+  function previewImage(input, previewId, fileNameId) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    document.getElementById(fileNameId).textContent = file.name;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.getElementById(previewId);
+      const wrap = document.getElementById(previewId + "Wrap");
+      img.src = e.target.result;
+      wrap.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function submitForm() {
+    const catName = document.getElementById("catName").value.trim();
+    if (!catName) return showAlert("error", "Category name is required.");
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    document.getElementById("submitText").textContent = editId ? "Updating..." : "Creating...";
+
+    const formData = new FormData();
+    formData.append("catName", catName);
+    formData.append("subHeading", document.getElementById("catSubHeading").value.trim());
+    formData.append("description", document.getElementById("catDescription").value.trim());
+
+    const fileInput = document.getElementById("catImageFile");
+    if (fileInput.files[0]) {
+      formData.append("catImage", fileInput.files[0]);
+    } else if (existingImage) {
+      formData.append("catImage", existingImage);
+    }
+
+    const adFileInput = document.getElementById("displayAdFile");
+    if (adFileInput.files[0])       formData.append("displayAd", adFileInput.files[0]);
+    else if (existingAdImage)       formData.append("displayAd", existingAdImage);
+    formData.append("adUrl", document.getElementById("adUrl").value.trim());
+      
+    const sidebarAdFileInput = document.getElementById("displayAdSidebarFile");
+    if (sidebarAdFileInput.files[0])      formData.append("displayAdSidebar", sidebarAdFileInput.files[0]);
+    else if (existingAdSidebarImage)      formData.append("displayAdSidebar", existingAdSidebarImage);
+    formData.append("sidebarAdUrl", document.getElementById("sidebarAdUrl").value.trim());
+      
+    try {
+      const url = editId ? `${API}/categories/${editId}` : `${API}/categories`;
+      const method = editId ? "PUT" : "POST";
+      const res = await fetch(url, { method, credentials: "include", body: formData });
+      const data = await res.json();
+      if (data.success) {
+        showAlert("success", editId ? "Category updated successfully!" : "Category created successfully!");
+        setTimeout(() => window.location.href = "dashboard.html", 1200);
+      } else {
+        showAlert("error", data.message || "Something went wrong.");
+      }
+    } catch {
+      showAlert("error", "Server error. Please try again.");
+    } finally {
+      btn.disabled = false;
+      document.getElementById("submitText").textContent = editId ? "Update Category" : "Create Category";
+    }
+  }
+
+  function showAlert(type, msg) {
+    const el = document.getElementById("alert");
+    el.className = `alert ${type}`;
+    el.textContent = msg;
+    el.style.display = "block";
+    if (type === "error") setTimeout(() => el.style.display = "none", 4000);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f0f2f5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      .login-card {
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .login-card h1 {
+        font-size: 24px;
+        color: #1a1a2e;
+        margin-bottom: 6px;
+      }
+
+      .login-card p {
+        font-size: 14px;
+        color: #888;
+        margin-bottom: 28px;
+      }
+
+      .form-group {
+        margin-bottom: 18px;
+      }
+
+      .form-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #444;
+        margin-bottom: 6px;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+        transition: border 0.2s;
+      }
+
+      .form-group input:focus {
+        border-color: #4f46e5;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 12px;
+        background: #4f46e5;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 8px;
+        transition: background 0.2s;
+      }
+
+      .btn:hover {
+        background: #3730a3;
+      }
+
+      .btn:disabled {
+        background: #a5b4fc;
+        cursor: not-allowed;
+      }
+
+      .error-msg {
+        background: #fee2e2;
+        color: #b91c1c;
+        padding: 10px 14px;
+        border-radius: 8px;
+        font-size: 13px;
+        margin-bottom: 16px;
+        display: none;
+      }
+
+      .role-group {
+        margin-bottom: 18px;
+      }
+
+      .role-group .role-title {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #444;
+        margin-bottom: 10px;
+      }
+
+      .role-options {
+        display: flex;
+        gap: 12px;
+      }
+
+      .role-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border: 1.5px solid #ddd;
+        border-radius: 8px;
+        cursor: pointer;
+        flex: 1;
+        transition: all 0.2s;
+      }
+
+      .role-option:hover {
+        border-color: #4f46e5;
+        background: #f5f3ff;
+      }
+
+      .role-option input[type="radio"] {
+        accent-color: #4f46e5;
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+
+      .role-option span {
+        font-size: 14px;
+        color: #444;
+        font-weight: 500;
+      }
+
+      .role-option.selected {
+        border-color: #4f46e5;
+        background: #f5f3ff;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-card">
+      <h1>Admin Panel</h1>
+      <p>Sign in to your account</p>
+
+      <div class="error-msg" id="errorMsg"></div>
+      
+      <!-- <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" placeholder="Admin Name" />
+      </div> -->
+      
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="admin@example.com" />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" />
+      </div>
+
+      <!-- <div class="role-group">
+        <span class="role-title">Login As</span>
+        <div class="role-options">
+          <label class="role-option selected" id="label-admin">
+            <input type="radio" name="role" value="admin" checked onchange="selectRole(this)" />
+            <span>Admin</span>
+          </label>
+          <label class="role-option" id="label-user">
+            <input type="radio" name="role" value="user" onchange="selectRole(this)" />
+            <span>User</span>
+          </label>
+        </div>
+      </div> -->
+
+      <button class="btn" id="loginBtn" onclick="handleLogin()">Sign In</button>
+    </div>
+<script src="config.js"></script>
+    <script>
+      const API      = CONFIG.API;
+  const BASE_URL = CONFIG.BASE_URL;
+
+      // If already logged in, redirect to dashboard
+      fetch(`${API}/auth/me`, { credentials: "include" })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) window.location.href = "dashboard.html";
+        })
+        .catch(() => {});
+
+      function selectRole(input) {
+        document.querySelectorAll(".role-option").forEach((el) => el.classList.remove("selected"));
+        input.closest(".role-option").classList.add("selected");
+      }
+
+      async function handleLogin() {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+        // const role = document.querySelector('input[name="role"]:checked').value;
+        const role = "admin";
+        const btn = document.getElementById("loginBtn");
+        const errorMsg = document.getElementById("errorMsg");
+
+        errorMsg.style.display = "none";
+
+        if (!email || !password) {
+          showError("Please enter email and password.");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Signing in...";
+
+        try {
+          const res = await fetch(`${API}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ email, password, role }),
+          });
+
+          const data = await res.json();
+
+          if (data.success) {
+            window.location.href = "dashboard.html";
+          } else {
+            showError(data.message || "Login failed.");
+          }
+        } catch (err) {
+          showError("Server error. Please try again.");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Sign In";
+        }
+      }
+
+      function showError(msg) {
+        const errorMsg = document.getElementById("errorMsg");
+        errorMsg.textContent = msg;
+        errorMsg.style.display = "block";
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleLogin();
+      });
+    </script>
+  </body>
+</html>
